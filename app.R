@@ -61,8 +61,6 @@ runs_test_custom <- function(x) {
 
 dt_opts <- list(dom = 't', paging = FALSE, ordering = FALSE, columnDefs = list(list(className = 'dt-center', targets = "_all")))
 
-# --- 以下為新增的 Helper Functions (來自 ch12, ch13, ES, SS) ---
-
 get_es_size <- function(w) {
   if (is.na(w)) return("")
   if (w >= 0.5) return("Large")
@@ -343,7 +341,6 @@ ui <- navbarPage(
   # ==========================================
   navbarMenu("Additional Tools",
              tabPanel("Effect Size Calculator", value = "tab_es", titlePanel("Effect Size Calculator & Converter"),
-                      # 將原本 ES.r UI 中的內容貼上，注意變數避免重名（建議原樣保留或全加上前綴，這裡為了方便整合已原樣呈現 tabsetPanel 內容）
                       tabsetPanel(
                         tabPanel("Means", fluidRow(
                           column(4, h4("Test of Single Mean"), wellPanel(numericInput("m1_mean", "Sample Mean:", -18.075), numericInput("m1_mu0", "Mean under H0:", 0), numericInput("m1_sd", "SD(x):", 32.6817)), DTOutput("m1_var_out"), br(), DTOutput("m1_es_out")),
@@ -361,7 +358,6 @@ ui <- navbarPage(
                           column(4, h4("ANOVA"), wellPanel(numericInput("aov_ss_a", "Among SS:", 21261.8289), numericInput("aov_df_a", "Among df:", 3), numericInput("aov_ss_w", "Within SS:", 36747.2267), numericInput("aov_df_w", "Within df:", 140)), DTOutput("aov_calc_out"), br(), DTOutput("aov_es_out"))
                         )),
                         tabPanel("Effect Size Converter", br(), h4("Interactive Converters"), wellPanel(
-                          # ... Converter 的 UI 排列，因為已經很多行，所以直接沿用 ES.r 中 ui 的這一部分 ...
                           fluidRow(class="conv-row", column(3, numericInput("cv_d1", "Cohen's d", 0.20)), column(1, HTML("<h4>&#8596;</h4>")), column(2, p(strong("Pearson's r =")), textOutput("res_cv_r1")), column(1, HTML("<hr style='width:1px; height:50px; background-color:#ddd;'>")), column(2, numericInput("cv_r2", "Pearson's r", 0.50)), column(1, HTML("<h4>&#8596;</h4>")), column(2, p(strong("Cohen's d =")), textOutput("res_cv_d2"))), hr(),
                           fluidRow(class="conv-row", column(3, numericInput("cv_d3", "Cohen's d", 0.4438)), column(1, HTML("<h4>&#8596;</h4>")), column(2, p(strong("Cohen's f =")), textOutput("res_cv_f1")), column(1, HTML("<hr style='width:1px; height:50px; background-color:#ddd;'>")), column(2, numericInput("cv_f4", "Cohen's f", 0.3950)), column(1, HTML("<h4>&#8596;</h4>")), column(2, p(strong("Cohen's d =")), textOutput("res_cv_d4"))), hr(),
                           fluidRow(class="conv-row", column(3, numericInput("cv_d5", "Cohen's d", 1.0000)), column(1, HTML("<h4>&#8596;</h4>")), column(2, p(strong("Log Odds Ratio =")), textOutput("res_cv_lo1")), column(1, HTML("<hr style='width:1px; height:50px; background-color:#ddd;'>")), column(2, numericInput("cv_lo6", "Log Odds Ratio", 1.8138)), column(1, HTML("<h4>&#8596;</h4>")), column(2, p(strong("Cohen's d =")), textOutput("res_cv_d6"))), hr(),
@@ -375,7 +371,6 @@ ui <- navbarPage(
                       )),
              
              tabPanel("Sample Size Calculator", value = "tab_ss", titlePanel("Comprehensive Sample Size Calculators"),
-                      # 同理將 SS.r UI 的 tabsetPanel 貼上
                       tabsetPanel(
                         tabPanel("Continuous Outcome", br(), sidebarLayout(
                           sidebarPanel(width=3, radioButtons("cont_type", "Select Design:", choices = c("One Sample", "Matched Sample", "Two Sample"))),
@@ -466,7 +461,7 @@ server <- function(input, output, session) {
   output$ch3_conv_table_rr2or <- renderDT({ p0 <- input$ch3_conv_prev / 100; or_val <- (input$ch3_conv_rr * (1 - p0)) / (1 - input$ch3_conv_rr * p0); lcl <- (input$ch3_conv_rr_lcl * (1 - p0)) / (1 - input$ch3_conv_rr_lcl * p0); ucl <- (input$ch3_conv_rr_ucl * (1 - p0)) / (1 - input$ch3_conv_rr_ucl * p0); datatable(data.frame(Estimates=c("OR", "LCL", "UCL"), Value=c(fmt(or_val), fmt(lcl), fmt(ucl))), options=list(dom='t', ordering=F), rownames=F) })
   
   # ==========================================
-  # CHAPTER 4.1, 4.2, 4.3 (Shortened implementation identical to prior run)
+  # CHAPTER 4.1, 4.2, 4.3
   # ==========================================
   ch41_parse <- function(text_input) { cleaned_text <- gsub("[,\\n]", " ", text_input); split_text <- unlist(strsplit(trimws(cleaned_text), "\\s+")); vals <- as.numeric(split_text); vals[!is.na(vals)] }
   ch41_data_tab1 <- reactive({ x <- ch41_parse(input$ch41_tab1_x); f <- ch41_parse(input$ch41_tab1_f); if (length(x) == 0 || length(x) != length(f)) return(NULL); p_x <- f / sum(f); x2 <- x^2; x_px <- x * p_x; x2_px <- x2 * p_x; mean_val <- sum(x_px); var_val <- sum(x2_px) - (mean_val^2); list(x=x, f=f, p_x=p_x, x2=x2, x_px=x_px, x2_px=x2_px, mean=mean_val, var=var_val, sd=sqrt(var_val)) })
@@ -496,7 +491,7 @@ server <- function(input, output, session) {
   output$ch43_find_z_table <- renderDT({ req(input$ch43_find_prob); datatable(data.frame(Result="z", Value=fmt(qnorm(input$ch43_find_prob))), options=list(dom='t', ordering=F), rownames=F) })
   
   # ==========================================
-  # CHAPTER 5, 6, 7.1, 7.2 (Direct integrations)
+  # CHAPTER 5, 6, 7.1, 7.2
   # ==========================================
   output$ch5_sm_stats_table <- renderTable({ sd_x <- if(input$ch5_sm_sd_var_choice == "sd") input$ch5_sm_sd_var_val else sqrt(input$ch5_sm_sd_var_val); se <- sd_x / sqrt(input$ch5_sm_n); z_single <- (input$ch5_sm_x - input$ch5_sm_mu) / se; data.frame(Metric = c("SD(pool) / SE", "z (Single)", "z (Lower)", "z (Upper)"), Value = sprintf("%.4f", c(se, z_single, (input$ch5_sm_xL - input$ch5_sm_mu) / se, (input$ch5_sm_xU - input$ch5_sm_mu) / se))) })
   output$ch5_sm_prob_table <- renderTable({ sd_x <- if(input$ch5_sm_sd_var_choice == "sd") input$ch5_sm_sd_var_val else sqrt(input$ch5_sm_sd_var_val); se <- sd_x / sqrt(input$ch5_sm_n); z_single <- (input$ch5_sm_x - input$ch5_sm_mu) / se; data.frame(Result = c("< or ≤", "> or ≥", "> or ≥ xL & < or ≤ xU (Between)"), Prob = sprintf("%.4f", c(pnorm(z_single), 1 - pnorm(z_single), pnorm((input$ch5_sm_xU - input$ch5_sm_mu) / se) - pnorm((input$ch5_sm_xL - input$ch5_sm_mu) / se)))) })
